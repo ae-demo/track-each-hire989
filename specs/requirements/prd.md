@@ -29,31 +29,31 @@ assigned for each new hire.
 ## User Stories
 
 1. As an HR Coordinator, I want to add a new hire with their start date, so
- that their onboarding can be scheduled.
+that their onboarding can be scheduled.
 2. As an HR Coordinator, I want a standard onboarding checklist to be created
- automatically across IT, HR and Facilities as soon as a new hire is added,
- so that nothing is missed.
+automatically across IT, HR and Facilities as soon as a new hire is added,
+so that nothing is missed.
 3. As an HR Coordinator, I want to maintain the standard checklist template
- (add, edit or remove its tasks), so that it stays current for future hires.
+(add, edit or remove its tasks), so that it stays current for future hires.
 4. As an HR Coordinator, I want to add a one-off task to a specific new hire's
- checklist, so that exceptions are covered without changing the template.
+checklist, so that exceptions are covered without changing the template.
 5. As an HR Coordinator, I want to view every new hire's onboarding status
- across all three departments, so that I can track overall progress.
+across all three departments, so that I can track overall progress.
 6. As an HR Coordinator, I want to see every overdue task across all new
- hires and departments, so that I can escalate what is stuck.
+hires and departments, so that I can escalate what is stuck.
 7. As an IT Staff member, I want to see the IT onboarding tasks assigned
- across all new hires, so that I know what to work on.
+across all new hires, so that I know what to work on.
 8. As an IT Staff member, I want to mark an IT task complete, so that its
- status reflects reality.
+status reflects reality.
 9. As a Facilities Staff member, I want to see the Facilities onboarding
- tasks assigned across all new hires, so that I know what to work on.
+tasks assigned across all new hires, so that I know what to work on.
 10. As a Facilities Staff member, I want to mark a Facilities task complete,
- so that its status reflects reality.
+so that its status reflects reality.
 11. As an HR Coordinator, I want to mark an HR task complete, so that its
- status reflects reality.
+status reflects reality.
 12. As an HR Coordinator, IT Staff member, or Facilities Staff member, I want
- to receive a reminder when a task assigned to my department becomes
- overdue, so that I can act on it.
+to receive a reminder when a task assigned to my department becomes
+overdue, so that I can act on it.
 
 ## Product Decisions
 
@@ -62,13 +62,13 @@ the org's standing default.
 - Reminders are sent by email, through the organization's internal
 transactional email service (a Registered External resource of the org).
 - A task is **overdue** the moment its due date passes without being marked
-complete. *assumed*
+complete.
 - Each overdue task's owning department gets one reminder per day until the
-task is completed. *assumed*
+task is completed.
 - Each standard checklist task carries an offset from the new hire's start
 date (e.g. "3 days before start", "1 day after start"); that offset is set
 once on the template and used to compute the task's due date for every new
-hire. *assumed*
+hire.
 - Departments only see and act on their own tasks; only the HR Coordinator
 has a cross-department view. (From actor definition above.)
 - New hires are tracked records only — they do not sign in or see the
@@ -84,8 +84,8 @@ systems — tasks are tracked natively in this product.
 ## Open Questions
 
 1. What are the actual tasks on the standard IT / HR / Facilities checklist
- template? The HR Coordinator can define and maintain them (Story 3); no
- specific list is assumed here.
+template? The HR Coordinator can define and maintain them (Story 3); no
+specific list is assumed here.
 
 ## Further Notes
 
