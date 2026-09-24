@@ -1,0 +1,17 @@
+{
+  "name": "onboarding-webapp",
+  "type": "web-application",
+  "version": "0.1.0",
+  "language": "TypeScript",
+  "buildpack": "docker",
+  "appPath": "onboarding-webapp",
+  "entrypoint": "deployment/web-application",
+  "exposure": "intranet",
+  "dependencies": [
+    { "kind": "component", "name": "onboarding-api", "description": "Calls the onboarding API for new hires, the checklist template, and department task queues." },
+    { "kind": "platform-resource", "name": "user-auth", "resourceType": "thunder-app" }
+  ],
+  "description": "Staff-facing single-page app for HR, IT and Facilities. HR adds new hires, maintains the checklist template, adds one-off tasks, and sees overdue items and cross-department status; IT and Facilities each work their own task queue. Holds no business data of its own — everything comes from onboarding-api.",
+  "stories": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+  "skillsPinned": ["wireframes", "react-webapp", "oxygen-ui-design-system", "thunder-authentication"]
+}

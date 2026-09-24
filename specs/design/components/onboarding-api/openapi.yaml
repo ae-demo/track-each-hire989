@@ -1,0 +1,440 @@
+openapi: 3.0.3
+info:
+  title: Onboarding API
+  version: 0.1.0
+  description: Tracks new hires, the standard checklist template, and per-department onboarding tasks.
+servers:
+  - url: /
+components:
+  securitySchemes:
+    oauth2:
+      type: oauth2
+      flows:
+        authorizationCode:
+          authorizationUrl: /oauth2/authorize
+          tokenUrl: /oauth2/token
+          scopes:
+            new-hires:create: Add a new hire
+            new-hires:read: View new hires
+            checklist-template:manage: Add, edit or remove template tasks
+            checklist-template:read: View the checklist template
+            tasks:read-all: Every onboarding task, any department
+            tasks:read-it: The IT department's tasks
+            tasks:read-facilities: The Facilities department's tasks
+            tasks:read-hr: The HR department's tasks
+            tasks:complete-it: Complete an IT task
+            tasks:complete-facilities: Complete a Facilities task
+            tasks:complete-hr: Complete an HR task
+            tasks:create-adhoc: Add a one-off task to a new hire
+  schemas:
+    Error:
+      type: object
+      required: [code, message]
+      properties:
+        code: { type: integer, description: HTTP or application error code }
+        message: { type: string, description: short human-readable label }
+        description: { type: string, description: detailed explanation }
+        moreInfo: { type: string, description: URI to documentation }
+    NewHire:
+      type: object
+      required: [id, name, startDate]
+      properties:
+        id: { type: string }
+        name: { type: string }
+        startDate: { type: string, format: date }
+        createdAt: { type: string, format: date-time }
+    NewHireCreate:
+      type: object
+      required: [name, startDate]
+      properties:
+        name: { type: string }
+        startDate: { type: string, format: date }
+    TemplateTask:
+      type: object
+      required: [id, department, title, offsetDays]
+      properties:
+        id: { type: string }
+        department: { type: string, enum: [HR, IT, Facilities] }
+        title: { type: string }
+        offsetDays: { type: integer, description: days from the new hire's start date; negative is before }
+    TemplateTaskWrite:
+      type: object
+      required: [department, title, offsetDays]
+      properties:
+        department: { type: string, enum: [HR, IT, Facilities] }
+        title: { type: string }
+        offsetDays: { type: integer }
+    Task:
+      type: object
+      required: [id, newHireId, department, title, dueDate, status, isAdHoc]
+      properties:
+        id: { type: string }
+        newHireId: { type: string }
+        newHireName: { type: string }
+        templateTaskId: { type: string, nullable: true }
+        department: { type: string, enum: [HR, IT, Facilities] }
+        title: { type: string }
+        dueDate: { type: string, format: date }
+        status: { type: string, enum: [open, complete] }
+        completedAt: { type: string, format: date-time, nullable: true }
+        isAdHoc: { type: boolean }
+    AdHocTaskCreate:
+      type: object
+      required: [department, title, dueDate]
+      properties:
+        department: { type: string, enum: [HR, IT, Facilities] }
+        title: { type: string }
+        dueDate: { type: string, format: date }
+security:
+  - oauth2: []
+paths:
+  /new-hires:
+    get:
+      operationId: listNewHires
+      summary: Every new hire
+      security:
+        - oauth2: [new-hires:read]
+      parameters:
+        - name: limit
+          in: query
+          schema: { type: integer, default: 20, maximum: 100 }
+        - name: offset
+          in: query
+          schema: { type: integer, default: 0 }
+      responses:
+        '200':
+          description: A page of new hires
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [count, data]
+                properties:
+                  count: { type: integer, description: total matching items }
+                  next: { type: string, nullable: true, description: relative URI of the next page }
+                  previous: { type: string, nullable: true, description: relative URI of the previous page }
+                  data: { type: array, items: { $ref: '#/components/schemas/NewHire' } }
+    post:
+      operationId: createNewHire
+      summary: Add a new hire and instantiate their checklist tasks
+      security:
+        - oauth2: [new-hires:create]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/NewHireCreate' }
+      responses:
+        '201':
+          description: The new hire was created and their tasks instantiated
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/NewHire' }
+        '400':
+          description: Invalid new hire details
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+  /new-hires/{newHireId}:
+    get:
+      operationId: getNewHire
+      summary: A single new hire
+      security:
+        - oauth2: [new-hires:read]
+      parameters:
+        - name: newHireId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: The new hire
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/NewHire' }
+        '404':
+          description: No such new hire
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+  /new-hires/{newHireId}/tasks:
+    post:
+      operationId: addAdHocTask
+      summary: Add a one-off task to this new hire's checklist
+      security:
+        - oauth2: [tasks:create-adhoc]
+      parameters:
+        - name: newHireId
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AdHocTaskCreate' }
+      responses:
+        '201':
+          description: The one-off task was added
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Task' }
+        '404':
+          description: No such new hire
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+  /checklist-template:
+    get:
+      operationId: listTemplateTasks
+      summary: The standard checklist template
+      security:
+        - oauth2: [checklist-template:read]
+      responses:
+        '200':
+          description: Every template task
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/TemplateTask' }
+    post:
+      operationId: addTemplateTask
+      summary: Add a task to the standard checklist template
+      security:
+        - oauth2: [checklist-template:manage]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/TemplateTaskWrite' }
+      responses:
+        '201':
+          description: The template task was added
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/TemplateTask' }
+        '400':
+          description: Invalid template task
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+  /checklist-template/{taskId}:
+    patch:
+      operationId: updateTemplateTask
+      summary: Edit a standard checklist template task
+      security:
+        - oauth2: [checklist-template:manage]
+      parameters:
+        - name: taskId
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/TemplateTaskWrite' }
+      responses:
+        '200':
+          description: The template task was updated
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/TemplateTask' }
+        '404':
+          description: No such template task
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+    delete:
+      operationId: removeTemplateTask
+      summary: Remove a standard checklist template task
+      security:
+        - oauth2: [checklist-template:manage]
+      parameters:
+        - name: taskId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '204':
+          description: The template task was removed
+        '404':
+          description: No such template task
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+  /tasks:
+    get:
+      operationId: listAllTasks
+      summary: Every onboarding task, any department
+      security:
+        - oauth2: [tasks:read-all]
+      parameters:
+        - name: overdue
+          in: query
+          schema: { type: boolean }
+          description: When true, only tasks past their due date and still open
+        - name: limit
+          in: query
+          schema: { type: integer, default: 20, maximum: 100 }
+        - name: offset
+          in: query
+          schema: { type: integer, default: 0 }
+      responses:
+        '200':
+          description: A page of tasks
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [count, data]
+                properties:
+                  count: { type: integer, description: total matching items }
+                  next: { type: string, nullable: true, description: relative URI of the next page }
+                  previous: { type: string, nullable: true, description: relative URI of the previous page }
+                  data: { type: array, items: { $ref: '#/components/schemas/Task' } }
+  /departments/it/tasks:
+    get:
+      operationId: listItTasks
+      summary: The IT department's tasks, across every new hire
+      security:
+        - oauth2: [tasks:read-it]
+      parameters:
+        - name: limit
+          in: query
+          schema: { type: integer, default: 20, maximum: 100 }
+        - name: offset
+          in: query
+          schema: { type: integer, default: 0 }
+      responses:
+        '200':
+          description: A page of IT tasks
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [count, data]
+                properties:
+                  count: { type: integer, description: total matching items }
+                  next: { type: string, nullable: true, description: relative URI of the next page }
+                  previous: { type: string, nullable: true, description: relative URI of the previous page }
+                  data: { type: array, items: { $ref: '#/components/schemas/Task' } }
+  /departments/it/tasks/{taskId}/complete:
+    post:
+      operationId: completeItTask
+      summary: Mark an IT task complete
+      security:
+        - oauth2: [tasks:complete-it]
+      parameters:
+        - name: taskId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: The task was marked complete
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Task' }
+        '404':
+          description: No such IT task
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+  /departments/facilities/tasks:
+    get:
+      operationId: listFacilitiesTasks
+      summary: The Facilities department's tasks, across every new hire
+      security:
+        - oauth2: [tasks:read-facilities]
+      parameters:
+        - name: limit
+          in: query
+          schema: { type: integer, default: 20, maximum: 100 }
+        - name: offset
+          in: query
+          schema: { type: integer, default: 0 }
+      responses:
+        '200':
+          description: A page of Facilities tasks
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [count, data]
+                properties:
+                  count: { type: integer, description: total matching items }
+                  next: { type: string, nullable: true, description: relative URI of the next page }
+                  previous: { type: string, nullable: true, description: relative URI of the previous page }
+                  data: { type: array, items: { $ref: '#/components/schemas/Task' } }
+  /departments/facilities/tasks/{taskId}/complete:
+    post:
+      operationId: completeFacilitiesTask
+      summary: Mark a Facilities task complete
+      security:
+        - oauth2: [tasks:complete-facilities]
+      parameters:
+        - name: taskId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: The task was marked complete
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Task' }
+        '404':
+          description: No such Facilities task
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+  /departments/hr/tasks:
+    get:
+      operationId: listHrTasks
+      summary: The HR department's tasks, across every new hire
+      security:
+        - oauth2: [tasks:read-hr]
+      parameters:
+        - name: limit
+          in: query
+          schema: { type: integer, default: 20, maximum: 100 }
+        - name: offset
+          in: query
+          schema: { type: integer, default: 0 }
+      responses:
+        '200':
+          description: A page of HR tasks
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [count, data]
+                properties:
+                  count: { type: integer, description: total matching items }
+                  next: { type: string, nullable: true, description: relative URI of the next page }
+                  previous: { type: string, nullable: true, description: relative URI of the previous page }
+                  data: { type: array, items: { $ref: '#/components/schemas/Task' } }
+  /departments/hr/tasks/{taskId}/complete:
+    post:
+      operationId: completeHrTask
+      summary: Mark an HR task complete
+      security:
+        - oauth2: [tasks:complete-hr]
+      parameters:
+        - name: taskId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: The task was marked complete
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Task' }
+        '404':
+          description: No such HR task
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }

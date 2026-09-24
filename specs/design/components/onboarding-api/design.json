@@ -1,0 +1,18 @@
+{
+  "name": "onboarding-api",
+  "type": "service",
+  "version": "0.1.0",
+  "language": "Ballerina",
+  "buildpack": "docker",
+  "appPath": "onboarding-api",
+  "entrypoint": "deployment/service",
+  "exposure": "intranet",
+  "dependencies": [
+    { "kind": "platform-resource", "name": "user-auth", "resourceType": "thunder-app" },
+    { "kind": "platform-resource", "name": "onboarding-db", "resourceType": "postgres-cnpg" },
+    { "kind": "external", "name": "email-service", "description": "Sends the daily overdue-task reminder email to the owning department." }
+  ],
+  "description": "Owns new hires, the standard checklist template, and every onboarding task. Instantiates a new hire's tasks from the template on creation, lets HR add one-off tasks and maintain the template, lets each department list and complete its own tasks, and runs the daily job that emails a reminder for every task still open past its due date. Does not send email itself — it calls the email service — and holds no UI.",
+  "stories": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+  "skillsPinned": ["openapi-conventions", "ballerina", "thunder-authentication", "api-management"]
+}

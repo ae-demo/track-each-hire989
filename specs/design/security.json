@@ -1,0 +1,79 @@
+{
+  "version": 3,
+  "permissions": [
+    {
+      "resource": "new-hires",
+      "component": "onboarding-api",
+      "description": "New hire records",
+      "actions": [
+        { "handle": "create", "description": "Add a new hire" },
+        { "handle": "read", "description": "Every new hire" }
+      ]
+    },
+    {
+      "resource": "checklist-template",
+      "component": "onboarding-api",
+      "description": "The standard onboarding checklist template",
+      "actions": [
+        { "handle": "manage", "description": "Add, edit or remove template tasks" },
+        { "handle": "read", "description": "View the template" }
+      ]
+    },
+    {
+      "resource": "tasks",
+      "component": "onboarding-api",
+      "description": "Onboarding tasks for new hires, per department",
+      "actions": [
+        { "handle": "read-all", "description": "Every onboarding task, any department" },
+        { "handle": "read-it", "description": "The IT department's tasks" },
+        { "handle": "read-facilities", "description": "The Facilities department's tasks" },
+        { "handle": "read-hr", "description": "The HR department's tasks" },
+        { "handle": "complete-it", "description": "Mark an IT task complete" },
+        { "handle": "complete-facilities", "description": "Mark a Facilities task complete" },
+        { "handle": "complete-hr", "description": "Mark an HR task complete" },
+        { "handle": "create-adhoc", "description": "Add a one-off task to a new hire" }
+      ]
+    }
+  ],
+  "groups": [
+    { "name": "HRDepartment", "description": "HR staff who run onboarding" },
+    { "name": "ITDepartment", "description": "IT staff who provision new hires" },
+    { "name": "FacilitiesDepartment", "description": "Facilities staff who prepare badges and desks" }
+  ],
+  "roles": [
+    {
+      "name": "HRCoordinator",
+      "description": "Adds new hires, maintains the checklist template, adds one-off tasks, works HR's own tasks, and sees status and overdue items across every department.",
+      "stories": [1, 2, 3, 4, 5, 6, 11],
+      "grants": [
+        "new-hires:create",
+        "new-hires:read",
+        "checklist-template:manage",
+        "checklist-template:read",
+        "tasks:read-all",
+        "tasks:complete-hr",
+        "tasks:create-adhoc"
+      ],
+      "assignTo": ["HRDepartment"]
+    },
+    {
+      "name": "ITStaff",
+      "description": "Works the IT department's onboarding task queue.",
+      "stories": [7, 8, 12],
+      "grants": ["new-hires:read", "tasks:read-it", "tasks:complete-it"],
+      "assignTo": ["ITDepartment"]
+    },
+    {
+      "name": "FacilitiesStaff",
+      "description": "Works the Facilities department's onboarding task queue.",
+      "stories": [9, 10, 12],
+      "grants": ["new-hires:read", "tasks:read-facilities", "tasks:complete-facilities"],
+      "assignTo": ["FacilitiesDepartment"]
+    }
+  ],
+  "testUsers": [
+    { "username": "test-hr-coordinator", "roles": ["HRCoordinator"] },
+    { "username": "test-it-staff", "roles": ["ITStaff"] },
+    { "username": "test-facilities-staff", "roles": ["FacilitiesStaff"] }
+  ]
+}

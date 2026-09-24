@@ -1,0 +1,17 @@
+title Track Each Hire
+
+component onboarding-webapp as "Onboarding Tracker" web-application
+component onboarding-api as "Onboarding API" service
+component onboarding-db as "Onboarding Database" database
+
+east user-auth as "Thunder Auth" identity-server
+south email-service as "Email Service" service
+
+west -> onboarding-webapp
+west -> onboarding-api
+
+onboarding-webapp -> onboarding-api
+onboarding-webapp -> user-auth
+onboarding-api -> user-auth
+onboarding-api -> onboarding-db
+onboarding-api -> email-service
