@@ -7,12 +7,71 @@
   "appPath": "onboarding-api",
   "entrypoint": "deployment/service",
   "exposure": "intranet",
-  "dependencies": [
-    { "kind": "platform-resource", "name": "user-auth", "resourceType": "thunder-app" },
-    { "kind": "platform-resource", "name": "onboarding-db", "resourceType": "postgres-cnpg" },
-    { "kind": "external", "name": "email-service", "description": "Sends the daily overdue-task reminder email to the owning department." }
+  "stories": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12
   ],
   "description": "Owns new hires, the standard checklist template, and every onboarding task. Instantiates a new hire's tasks from the template on creation, lets HR add one-off tasks and maintain the template, lets each department list and complete its own tasks, and runs the daily job that emails a reminder for every task still open past its due date. Does not send email itself — it calls the email service — and holds no UI.",
-  "stories": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
-  "skillsPinned": ["openapi-conventions", "ballerina", "thunder-authentication", "api-management"]
+  "dependencies": [
+    {
+      "kind": "platform-resource",
+      "name": "user-auth",
+      "resourceType": "thunder-app",
+      "wiring": {
+        "ref": "track-each-hire98-210fb728",
+        "envBindings": {
+          "client_id": "USER_AUTH_CLIENT_ID",
+          "issuer": "USER_AUTH_ISSUER",
+          "jwks_url": "USER_AUTH_JWKS_URL",
+          "resource": "USER_AUTH_RESOURCE",
+          "scopes": "USER_AUTH_SCOPES"
+        }
+      }
+    },
+    {
+      "kind": "platform-resource",
+      "name": "onboarding-db",
+      "resourceType": "postgres-cnpg",
+      "wiring": {
+        "ref": "track-each-hire98-e3cbee4e",
+        "envBindings": {
+          "dbname": "ONBOARDING_DB_DBNAME",
+          "host": "ONBOARDING_DB_HOST",
+          "password": "ONBOARDING_DB_PASSWORD",
+          "port": "ONBOARDING_DB_PORT",
+          "user": "ONBOARDING_DB_USER"
+        }
+      }
+    },
+    {
+      "kind": "external",
+      "name": "email-service",
+      "description": "Sends the daily overdue-task reminder email to the owning department.",
+      "wiring": {
+        "ref": "track-each-hire98-b223a05a",
+        "envBindings": {
+          "EMAIL_SERVICE_BASE_URL": "EMAIL_SERVICE_BASE_URL"
+        }
+      }
+    }
+  ],
+  "exposesAPI": {
+    "auth": "end-user-required"
+  },
+  "skillsPinned": [
+    "openapi-conventions",
+    "ballerina",
+    "thunder-authentication",
+    "api-management"
+  ]
 }
